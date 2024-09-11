@@ -50,11 +50,9 @@ const commandFolders = fs.readdirSync(foldersPath);  // read all folders names i
 const eventsPath = path.join(__dirname, 'events'); // set path to 'events' dir
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js')); // read all files in dir
 for (const file of eventFiles) {
-    console.log(`File: ${file}`); // file populated fine
 	const filePath = path.join(eventsPath, file);
     const eventModule = await import(pathToFileURL(filePath).href); // 1. import
     const event = eventModule.default //  2. extract the entirety of 'export default xxx' into a variable
-    console.log(`Event registered: ${event.name}`);
 	if (event.once) {
 		client.once(event.name, (...args) => event.execute(...args)); // args array holds event
 	} else {
