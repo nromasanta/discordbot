@@ -25,7 +25,8 @@ const foldersPath = path.join(__dirname, 'commands'); // set path to 'commands' 
 const commandFolders = fs.readdirSync(foldersPath);  // read all folders names in 'commands' dir
 
 // ----- COMMAND HANDLER ----- // 
-// FUTURE NOTE: consider changing files to .mjs instead of .js
+// 1. Dynamically retrieve command files
+//  2. Store in previously defined client.commands obj made from new Collection()
 (async () => {
     for (const folder of commandFolders) {
         const commandsPath = path.join(foldersPath, folder); // think $pwd to current folder (commands)
@@ -36,7 +37,7 @@ const commandFolders = fs.readdirSync(foldersPath);  // read all folders names i
                 const commandModule = await import(pathToFileURL(filePath).href); // import
                 const command = commandModule.default; // get the defaeult exports
                 if (command && 'data' in command && 'execute' in command) { // if with have both data and execute
-                    client.commands.set(command.data.name, command);
+                    client.commands.set(command.data.name, command); // move into collection
                 } else {
                     console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property`);
                 }
