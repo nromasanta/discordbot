@@ -1,4 +1,4 @@
-import { Events } from 'discord.js';
+import { Events, EmbedBuilder } from 'discord.js';
 
 //json obj
 const interactionCreateEvent = {
@@ -22,8 +22,36 @@ const interactionCreateEvent = {
                 }
             }
         } else if (interaction.isModalSubmit()) {
+            const interactionUser = await interaction.guild.members.fetch(interaction.user.id);
+            const botIcon = interaction.guild.members.me.user.displayAvatarURL();
+            const interactionUserIcon = interactionUser.displayAvatarURL();
+
+            console.log(`Interaction User: ${interactionUser.nickname}`);
             if (interaction.customId == 'betModal') {
-                await interaction.reply({ content: 'Model Submitted' });
+                await interaction.reply({ content: '...' });
+                const scenario = interaction.fields.getTextInputValue('scenarioInput');
+	            const opt1 = interaction.fields.getTextInputValue('optionOneInput');
+                const opt2 = interaction.fields.getTextInputValue('optionTwoInput');
+	            console.log({ scenario, opt1, opt2 });
+
+                const betEmbed = new EmbedBuilder() 
+                .setColor(0x0099FF)
+                .setTitle(`--------------------------------\n${scenario}\n--------------------------------`)
+                .addFields( 
+                    {
+                        name: `1.`,
+                        value: `${opt1}`
+                    },
+                    {
+                        name: `2.`,
+                        value: `${opt2}`
+                    }
+                )
+                .setThumbnail(botIcon)
+                .setFooter({ text: `Created by ${interactionUser.nickname}`, iconURL: `${interactionUserIcon}`})
+
+                interaction.guild.channels.cache.get('1097682508381958174').send({ embeds: [betEmbed] });
+
             }
         }
     }

@@ -58,7 +58,7 @@ for (const file of eventFiles) {
 		client.once(event.name, (...args) => event.execute(...args)); // args array holds event
 	} else {
 		client.on(event.name, (...args) => event.execute(...args)); 
-	}
+	} 
 }
 
 
