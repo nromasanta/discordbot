@@ -11,7 +11,13 @@ const token = process.env.DISCORD_TOKEN; // use token to log into discord and, i
 
 // init client (bot)
 // declares the intent to receive info about guilds(server) like avail channels/roles
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions
+] });
 
 // --------------------- END INIT SETUP --------------------- //
 client.commands = new Collection(); // store commands here
