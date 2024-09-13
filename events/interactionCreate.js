@@ -25,7 +25,8 @@ const interactionCreateEvent = {
         } else if (interaction.isModalSubmit()) {
             const botIcon = interaction.guild.members.me.user.displayAvatarURL(); // bot icon
             const interactionUserIcon = interactionUser.displayAvatarURL(); // user icon
-            const interactionTime = new Date().toLocaleString();
+            const interactionTime = new Date().toLocaleString(); // timestamp submission
+
 
             console.log(`Interaction User: ${interactionUser.nickname}`);
             if (interaction.customId == 'betModal') {
@@ -50,7 +51,7 @@ const interactionCreateEvent = {
                         }
                     )
                     .setThumbnail(botIcon)
-                    .setFooter({ text: `${interactionTime}`, iconURL: `${interactionUserIcon}` });
+                    .setFooter({ text: `${interactionTime} || ID: 4310`, iconURL: `${interactionUserIcon}` });
                 // ----- BUTTON BUILDER ------ // 
                 const opt1Button = new ButtonBuilder()
                     .setCustomId('opt1Button')
@@ -68,13 +69,26 @@ const interactionCreateEvent = {
 
             }
         } else if (interaction.isButton()) {
+            const max_wager = 500;
             console.log("Button Clicked!");
             await interaction.reply({ content: `<@${interactionUser.id}> Enter amount you want to wager` });
             const messageFilter = m => m.author.id === interactionUser.id;
             const collector = interaction.channel.createMessageCollector({ filter: messageFilter, max: 1 });
             collector.on('collect', m => {
                 console.log(`Message collected: ${m}`);
+                if ((m.content.match(/^[0-9]+$/)) == null) { // sanitize input
+                    console.log(`'${m.content}' contains non-numerical digits`);
+                    interaction.followUp({ content: `Try again, enter a whole number only`});
+                    return;
+                } 
+                const userInput = Number(m.content); 
+                console.log(`Bet amount: ${userInput}`);
+                if (userInput > max_wager) {
+                    interaction.followUp({ content: `Bet amount exceeds available balance`});
+                    return;
+                }
                 interaction.followUp({ content: `${interactionUser.nickname} has wagered ${m} Slab Bucks` });
+                
             });
         }
     }
