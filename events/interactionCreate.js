@@ -65,7 +65,7 @@ const interactionCreateEvent = {
                 const buttonRow = new ActionRowBuilder()
                     .addComponents(opt1Button, opt2Button);
 
-                interaction.guild.channels.cache.get('1097682508381958174').send({ embeds: [betEmbed], components: [buttonRow] }); // send to appropriate channel
+                interaction.guild.channels.cache.get('1283977584652320850').send({ embeds: [betEmbed], components: [buttonRow] }); // send to appropriate channel
 
             }
         } else if (interaction.isButton()) {
