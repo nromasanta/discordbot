@@ -7,7 +7,7 @@ const commandData = new SlashCommandBuilder()
 
 // defining execute command
 async function execute(interaction) {
-    await interaction.reply('Pong');
+    await interaction.reply({content:`userId: ${interaction.user.id}`, ephemeral:true});
 }
 
 // command obj with data and the execute func

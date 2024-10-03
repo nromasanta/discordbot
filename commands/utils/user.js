@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { Users } from '../../events/ready.js';
+import { Users } from '../../scripts/databaseInit.js';
 
 const commandData = new SlashCommandBuilder()
     .setName('user')

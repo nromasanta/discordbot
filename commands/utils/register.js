@@ -1,5 +1,11 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { Users } from '../../events/ready.js';
+import { Users } from '../../scripts/databaseInit.js';
+// -------------------------------------------------------
+// Purpose: Insert new user joined into db
+// Details:
+// - Create a new Users
+// - only need to define name, but the wins and losses default to 0 per the model
+// -------------------------------------------------------
 
 // defining command using discord's SlashCommandBuilder tool
 const commandData = new SlashCommandBuilder()
@@ -8,9 +14,12 @@ const commandData = new SlashCommandBuilder()
 
 // defining execute command
 async function execute(interaction) {
-    const caller = await Users.create({ name: interaction.user.username});
-    console.log(caller instanceof Users);
-    await interaction.reply('Successfully registered!');
+    try {
+        const caller = await Users.create({ id: interaction.user.id });
+        await interaction.reply('Successfully registered!');
+    } catch {
+        await interaction.reply('Error registering. You might be already registered');
+    }
 }
 
 // command obj with data and the execute func
