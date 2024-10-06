@@ -35,6 +35,27 @@ const Users = sequelizeObj.define('users', {
     },
 }, {timestamps: false});
 
+const activeWagers = sequelizeObj.define('activeWagers', {
+    wagerId: {
+        type: DataTypes.STRING,
+        unique: true,
+        primaryKey: true,
+    }, 
+    creatorId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    optionA: {
+        type: DataTypes.TEXT,
+    },
+    optionB: {
+        type: DataTypes.TEXT,
+    },
+    createdAt: {
+        type: DataTypes.TEXT
+    }
+}, {timestamps: false});
+
 async function initDatabase() {
     try {
         await sequelizeObj.authenticate();
@@ -46,4 +67,4 @@ async function initDatabase() {
 }
 
 export default sequelizeObj;
-export { Users, initDatabase };
+export { Users, activeWagers, initDatabase };
