@@ -68,7 +68,7 @@ const interactionCreateEvent = {
                         }
                     )
                     .setThumbnail(botIcon)
-                    .setFooter({ text: `${interactionTime} || ID: ${wagerId}`, iconURL: `${interactionUserIcon}` });
+                    .setFooter({ text: `UID: ${interaction.user.id} ID: ${wagerId}`, iconURL: `${interactionUserIcon}` });
                 // 4. attach buttons
                 const opt1Btn = new ButtonBuilder()
                     .setCustomId(`opt1Btn_${scenario}`) // attach senario to button so we can extract it later
@@ -106,13 +106,14 @@ const interactionCreateEvent = {
             } else {
                 console.log(`Pre-tested interaction.customId-> ${interaction.customId}`);
                 scenario = (interaction.customId).slice(10);
+                selectedBtn = 'finishBtn';
                 console.log(`Scenario extracted from finish button press-> ${scenario}`);
             }
             const max_wager = 500;
 
 
             // opt1 or op2
-            if (interaction.customId != 'resolveBtn') {
+            if (selectedBtn != 'finishBtn') {
                 await interaction.reply({ content: `<@${interactionUser.id}> Enter amount you want to wager` });
                 const messageFilter = m => m.author.id === interactionUser.id;
                 const collector = interaction.channel.createMessageCollector({ filter: messageFilter, max: 1 });
@@ -133,21 +134,26 @@ const interactionCreateEvent = {
 
                 });
                 // finish
-            } else if (interaction.customId == 'resolveBtn') {
-                
+            } else if (selectedBtn == 'finishBtn') { // finish the scenario
                 await interaction.reply({ content: `<@${interactionUser.id}> Select the Winner (1 or 2)` });
                 const messageFilter = m => m.author.id === interactionUser.id;
                 const collector = interaction.channel.createMessageCollector({ filter: messageFilter, max: 1 });
                 collector.on('collect', m => {
-                    console.log(`Message collected: ${m}`);
-                    if (m.content != '1' || '2') { // sanitize input
-                        console.log(`'${m.content}' is not a valid option`);
+                    const userInput = Number(m.content);
+                    console.log(`Message collected: ${userInput}`);
+                    if (userInput != 1 && userInput != 2) { // sanitize input
+                        console.log(`'${userInput}' is not a valid option`);
                         interaction.followUp({ content: `Invalid Input` });
                         return;
                     }
-                    const userInput = Number(m.content);
+                    
+                    let optionRegex = /([A-z0-9\s]+)/g; // regex to extract option
+                    const optionWinnerText = interaction.message.embeds[0].fields[userInput-1].name;
+                    console.log(`optionWinnerText -> ${optionWinnerText}`);
+                    const extractedOptionText = optionWinnerText.match(optionRegex);
+                    console.log(`extractedOptionText -> ${extractedOptionText[1]}`);
                     console.log(`Winner declared: ${userInput}`);
-                    interaction.followUp({ content: `${interactionUser.nickname} has wagered ${m} Slab Bucks` });
+                    interaction.followUp({ content: `${interactionUser.nickname} has declared the winner: ${extractedOptionText[1].trim()} ` });
 
                 });
             }
