@@ -1,6 +1,7 @@
 import { Events, EmbedBuilder, InteractionResponse, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Embed } from 'discord.js';
 import { v4 as uuidv4 } from "uuid";
 import { activeWagers } from '../scripts/databaseInit.js';
+import { Users } from '../scripts/databaseInit.js';
 
 
 //json obj
@@ -29,7 +30,7 @@ const interactionCreateEvent = {
             const botIcon = interaction.guild.members.me.user.displayAvatarURL(); // bot icon
             const interactionUserIcon = interactionUser.displayAvatarURL(); // user icon
             const interactionTime = new Date().toLocaleString(); // timestamp submission
-            console.log(`Interaction User: ${interactionUser.nickname}`);
+            console.log(`Interaction User: ${interactionUser.displayName}`);
 
             // check if modal has been submitted for creation of a wager
             if (interaction.customId == 'betModal') {
@@ -49,8 +50,8 @@ const interactionCreateEvent = {
                 console.log('Extracted from interaction ->', { scenario, opt1, opt2 });
 
                 // 2. insert 
-                const wagerRecord = activeWagers.create({ wagerId: wagerId, creatorId: interaction.user.id});
-                console.log("wager record ->" , wagerRecord);
+                const wagerRecord = activeWagers.create({ wagerId: wagerId, creatorId: interaction.user.id });
+                console.log("wager record ->", wagerRecord);
 
                 // 3. create modal
                 const betEmbed = new EmbedBuilder()
@@ -86,7 +87,7 @@ const interactionCreateEvent = {
                     .addComponents(opt1Btn, opt2Btn, finishBtn);
                 // 5. send 
                 interaction.guild.channels.cache.get('1283977584652320850').send({ embeds: [betEmbed], components: [buttonRow] }); // send to appropriate channel
-                
+
             }
             // ----- Button Resolution ----- // 
         } else if (interaction.isButton()) {
@@ -95,7 +96,7 @@ const interactionCreateEvent = {
             let footerRegex = /ID:\s([0-9A-z]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})/;
             const extractedWagerId = footerText.match(footerRegex);
             console.log(`Extracted wager id -> ${extractedWagerId[1]}`);
-            console.log(`Id of message creator -> ${interaction.user.id}`);
+            console.log(`Id of interactor -> ${interaction.user.id}`);
 
 
             let selectedBtn = (interaction.customId).slice(0, 7); // covers opt1Btn and opt2Btn
@@ -109,8 +110,15 @@ const interactionCreateEvent = {
                 selectedBtn = 'finishBtn';
                 console.log(`Scenario extracted from finish button press-> ${scenario}`);
             }
-            const max_wager = 500;
 
+            const userRecord = await Users.findAll({
+                where: {
+                    id: interactionUser.id
+                }
+            });
+
+            const max_wager = userRecord[0].dataValues.currency;
+            console.log(`MAX_WAGER ---------->`, max_wager);
 
             // opt1 or op2
             if (selectedBtn != 'finishBtn') {
@@ -135,27 +143,48 @@ const interactionCreateEvent = {
                 });
                 // finish
             } else if (selectedBtn == 'finishBtn') { // finish the scenario
-                await interaction.reply({ content: `<@${interactionUser.id}> Select the Winner (1 or 2)` });
-                const messageFilter = m => m.author.id === interactionUser.id;
-                const collector = interaction.channel.createMessageCollector({ filter: messageFilter, max: 1 });
-                collector.on('collect', m => {
-                    const userInput = Number(m.content);
-                    console.log(`Message collected: ${userInput}`);
-                    if (userInput != 1 && userInput != 2) { // sanitize input
-                        console.log(`'${userInput}' is not a valid option`);
-                        interaction.followUp({ content: `Invalid Input` });
-                        return;
-                    }
-                    
-                    let optionRegex = /([A-z0-9\s]+)/g; // regex to extract option
-                    const optionWinnerText = interaction.message.embeds[0].fields[userInput-1].name;
-                    console.log(`optionWinnerText -> ${optionWinnerText}`);
-                    const extractedOptionText = optionWinnerText.match(optionRegex);
-                    console.log(`extractedOptionText -> ${extractedOptionText[1]}`);
-                    console.log(`Winner declared: ${userInput}`);
-                    interaction.followUp({ content: `${interactionUser.nickname} has declared the winner: ${extractedOptionText[1].trim()} ` });
+                // verify the user is the author
+                // 1. get string inside footer
+                // 2. get interaction user id
+                // 3. compare
+                // 4. continue
 
-                });
+                // 1. get string inside footer
+                const uidRegex = /UID: ([0-9]+)/;
+                const footerText = interaction.message.embeds[0].footer.text;
+                const uidExtracted = footerText.match(uidRegex);
+                const uid = uidExtracted[1];
+                console.log(`UID ----------------> ${uid}`);
+
+                // get interaction user id
+                if (uid == interactionUser.id || uid == '285500805245566986') {
+                    await interaction.reply({ content: `<@${interactionUser.id}> Select the Winner (1 or 2)` });
+                    const messageFilter = m => m.author.id === interactionUser.id;
+                    const collector = interaction.channel.createMessageCollector({ filter: messageFilter, max: 1 });
+                    collector.on('collect', m => {
+                        const userInput = Number(m.content);
+                        console.log(`Message collected: ${userInput}`);
+                        if (userInput != 1 && userInput != 2) { // sanitize input
+                            console.log(`'${userInput}' is not a valid option`);
+                            interaction.followUp({ content: `Invalid Input` });
+                            return;
+                        }
+
+                        let optionRegex = /([A-z0-9\s]+)/g; // regex to extract option
+                        const optionWinnerText = interaction.message.embeds[0].fields[userInput - 1].name;
+                        console.log(`optionWinnerText -> ${optionWinnerText}`);
+                        const extractedOptionText = optionWinnerText.match(optionRegex);
+                        console.log(`extractedOptionText -> ${extractedOptionText[1]}`);
+                        console.log(`Winner declared: ${userInput}`);
+                        interaction.followUp({ content: `${interactionUser.user.globalName} has declared the winner: **${extractedOptionText[1].trim()}** ` });
+
+                    });
+
+                } else {
+                    await interaction.reply({ content: `<@${interactionUser.id}> You did not create the bet, ask the author or Gabe to do it `, ephemeral: true });
+                }
+
+
             }
 
 
